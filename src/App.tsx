@@ -1,30 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "./supabase";
 import "./App.css";
 
-const wallets = [
-  { id: 1, name: "الدخل", balance: 2150, color: "green" },
-  { id: 2, name: "المدخر", balance: 0, color: "red" },
-  { id: 3, name: "التكاليف الثابتة", balance: 1115, color: "white" },
-  { id: 4, name: "التكاليف شبه الثابتة", balance: 200, color: "white" },
-  { id: 5, name: "طعام", balance: 400, color: "white" },
-  { id: 6, name: "ملابس", balance: 100, color: "white" },
-  { id: 7, name: "اعتناء بالجسم", balance: 50, color: "white" },
-  { id: 8, name: "ترفيه", balance: 50, color: "white" },
-  { id: 9, name: "أثاث", balance: 200, color: "white" },
-];
-
 function App() {
+  const walletsTableName = "Wallets";
   const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [selectedId, setSelectedId] = useState(3);
+  const [wallets, setWallets] = useState([
+    { id: 1, name: "الدخل", balance: 0 },
+  ]);
+
+  useEffect(() => {
+    loadWallets();
+  }, []);
+
+  async function loadWallets() {
+    const { data, error } = await supabase
+      .from(walletsTableName)
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setWallets(data);
+  }
+
+  const handleAdd = async () => {
+    const wallet = wallets.find((item) => item.id === Number(selectedId));
+    if (!wallet) return;
+
+    await supabase
+      .from(walletsTableName)
+      .update({ balance: wallet.balance - Number(amount) })
+      .eq("id", Number(selectedId));
+
+    loadWallets();
+  };
 
   return (
     <>
       <div className="grid">
 
         {wallets.map((wallet) => (
-          <div key={wallet.name} className={`card ${wallet.color}`}>
+          <div key={wallet.id} className={`flex-col card ${wallet.id <= 2 ? "bg-green-500" : "bg-white-500"}`}>
             <div>{wallet.name}</div>
-            <div>&nbsp;</div>
-            <div>{wallet.balance}</div>
+            <div className={wallet.balance < 0 ? "text-red-500" : "text-black-500"}>{wallet.balance}</div>
           </div>
         ))}
 
@@ -40,12 +64,10 @@ function App() {
 
             <h2>إضافة عملية شراء</h2>
 
-            <input
-              type="text"
-              placeholder="ماذا اشتريت؟"
-            />
-
-            <select>
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedId(parseInt(e.target.value))}
+            >
               {wallets
                 .filter(
                   (x) =>
@@ -53,7 +75,7 @@ function App() {
                     x.name !== "المدخر"
                 )
                 .map((wallet) => (
-                  <option key={wallet.name}>
+                  <option key={wallet.id} value={wallet.id}>
                     {wallet.name}
                   </option>
                 ))}
@@ -62,10 +84,17 @@ function App() {
             <input
               type="number"
               placeholder="المبلغ"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
             />
 
             <div className="buttons">
-              <button onClick={() => setOpen(false)}>
+              <button onClick={() => {
+                handleAdd();
+                setAmount("");
+                setSelectedId(3);
+                setOpen(false);
+              }}>
                 تم
               </button>
 
