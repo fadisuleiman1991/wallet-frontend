@@ -7,6 +7,7 @@ function App() {
   const lastUpdateName = "lastUpdate";
   const transferableWallets = ["طعام", "أثاث", "شبه الثابتة"];
   const nonTransferableWallets = ["ملابس", "اعتناء بالجسم", "ترفيه"];
+  const currentMonth = new Date().toISOString().slice(0, 7);
 
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -52,7 +53,6 @@ function App() {
   };
 
   async function updateWallets(): Promise<void> {
-    const currentMonth = new Date().toISOString().slice(0, 7);
 
     if (lastUpdate[0].value !== currentMonth) {
       const newWallets = wallets.map((wallet) => {
@@ -109,7 +109,7 @@ function App() {
           +
         </button>
 
-        <button className="col-span-2 card bg-blue-500 text-white" onClick={() => updateWallets()}>
+        <button disabled={lastUpdate[0]?.value === currentMonth} className="col-span-2 card bg-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50 text-white" onClick={() => updateWallets()}>
           حدث الشهر
         </button>
       </div>
