@@ -1,21 +1,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 import "./App.css";
+import type { Wallet } from "./type/Wallet";
 
 function App() {
   const walletsTableName = "Wallets";
   const lastUpdateName = "lastUpdate";
-  const transferableWallets = ["طعام", "أثاث", "شبه الثابتة"];
-  const nonTransferableWallets = ["ملابس", "اعتناء بالجسم", "ترفيه"];
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedId, setSelectedId] = useState(3);
   const [lastUpdate, setLastUpdate] = useState([{ id: 1, value: "2000-01" }]);
-  const [wallets, setWallets] = useState([
-    { id: 1, name: "الدخل", balance: 0, color: "green", sort_id: 1, constant: 0 },
-  ]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
 
   useEffect(() => {
     loadData();
@@ -40,7 +37,7 @@ function App() {
     setData(data);
   }
 
-  const handleAdd = async () => {
+  async function updateWallet() {
     const wallet = wallets.find((item) => item.id === Number(selectedId));
     if (!wallet) return;
 
@@ -53,37 +50,30 @@ function App() {
   };
 
   async function updateWallets(): Promise<void> {
-
     if (lastUpdate[0].value !== currentMonth) {
       const newWallets = wallets.map((wallet) => {
         let balance = wallet.balance;
-        if (wallet.name === "المدخر") {
+
+        if (wallet.type === "CALCULABLE") {
           balance =
             wallet.balance +
-            wallets.reduce(
-              (acc, w) =>
-                acc +
-                (transferableWallets.includes(w.name)
-                  ? w.balance
-                  : 0),
-              0
-            );
+            wallets.reduce((acc, w) => acc + (w.type === "TRANSFERABLE" ? w.balance : 0), 0);
         }
-        else if (transferableWallets.includes(wallet.name)) {
+        else if (wallet.type === "TRANSFERABLE") {
           balance = wallet.constant;
-        } else if (nonTransferableWallets.includes(wallet.name)) {
+        } else if (wallet.type === "CUMULATIVE") {
           balance += wallet.constant;
         }
         return { ...wallet, balance };
       });
 
       await supabase
-          .from(walletsTableName)
-          .upsert(newWallets),
+        .from(walletsTableName)
+        .upsert(newWallets),
 
-        await supabase
-          .from(lastUpdateName)
-          .upsert({id: 1, value: currentMonth })
+      await supabase
+        .from(lastUpdateName)
+        .upsert({ id: 1, value: currentMonth })
 
       loadData();
 
@@ -109,7 +99,10 @@ function App() {
           +
         </button>
 
-        <button disabled={lastUpdate[0]?.value === currentMonth} className="col-span-2 card bg-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50 text-white" onClick={() => updateWallets()}>
+        <button disabled={lastUpdate[0]?.value === currentMonth}
+          className="col-span-2 card bg-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+          onClick={() => updateWallets()}
+        >
           حدث الشهر
         </button>
       </div>
@@ -145,7 +138,7 @@ function App() {
 
             <div className="buttons">
               <button onClick={() => {
-                handleAdd();
+                updateWallet();
                 setAmount("");
                 setSelectedId(4);
                 setOpen(false);
