@@ -10,7 +10,7 @@ function App() {
 
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
-  const [selectedId, setSelectedId] = useState(3);
+  const [selectedId, setSelectedId] = useState(4);
   const [lastUpdate, setLastUpdate] = useState([{ id: 1, value: "2000-01" }]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
 
@@ -43,7 +43,7 @@ function App() {
 
     await supabase
       .from(walletsTableName)
-      .update({ balance: wallet.balance - Number(amount) })
+      .update({ balance: (wallet.balance - Number(amount)).toFixed(2) })
       .eq("id", Number(selectedId));
 
     loadTable(walletsTableName, "sort_id", setWallets);
