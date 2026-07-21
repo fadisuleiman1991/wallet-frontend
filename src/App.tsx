@@ -64,7 +64,7 @@ function App() {
         } else if (wallet.type === "CUMULATIVE") {
           balance += wallet.constant;
         }
-        return { ...wallet, balance };
+        return { ...wallet, balance: wallet.balance.toFixed(2) };
       });
 
       await supabase
