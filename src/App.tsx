@@ -58,8 +58,9 @@ function App() {
           balance =
             wallet.balance +
             wallets.reduce((acc, w) => acc + (w.type === "TRANSFERABLE" ? w.balance : 0), 0);
-        }
-        else if (wallet.type === "TRANSFERABLE") {
+        } else if (wallet.type === "TRANSFERABLE") {
+          balance = wallet.constant;
+        } else if (wallet.type === "CONSTANT") {
           balance = wallet.constant;
         } else if (wallet.type === "CUMULATIVE") {
           balance += wallet.constant;
